@@ -1,0 +1,16 @@
+# ROS parameters
+topics:
+  image_left_topic: "/cam_0/image_raw"
+  image_right_topic: "/cam_1/image_raw"
+  pointcloud_topic: "/ouster/points"
+
+# Dense Stereo parameters
+vfov: 100
+ndisp: 80
+wsize: 7
+
+# Init transformation of the lidar in left camera frame
+T_cam_lidar: [-0.101265, -0.420947,   0.90142,  0.643826,
+-0.994502,  0.018423,  -0.10312,  0.335025,
+0.0268019, -0.906904 ,-0.420495, -0.451624,
+        0,         0,         0,         1]
