@@ -26,8 +26,8 @@ void torrusFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_in,
 bool Calibrator::calibrate() {
 
     while (_leftImage.empty() || _rightImage.empty() || _pcl_cloud_lidar == nullptr) {
-        std::cout << "Calibration failed. Retrying..." << std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::cout << "Wait for scans and image, don't move the robot!" << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
     // Downsample image
@@ -95,7 +95,7 @@ bool Calibrator::calibrate() {
         return false;
     } else {
         std::cout << "ICP converged with fitness score: " << icp.getFitnessScore() << std::endl;
-        std::cout << "Transformation matrix:\n" << icp.getFinalTransformation() << std::endl;
+        std::cout << "Transformation matrix T_lidar_cam0 :\n" << icp.getFinalTransformation() << std::endl;
 
         // Visualization
         pcl::visualization::PCLVisualizer viewer("ICP Alignment");

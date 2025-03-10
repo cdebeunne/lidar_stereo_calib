@@ -158,13 +158,6 @@ void denseStereo::InitRectifyMap() {
         InitUndistortRectifyMap(Kl, Dl, xil, Rl, Knew, img_size, smap[0][0], smap[0][1]);
         InitUndistortRectifyMap(Kr, Dr, xir, Rr, Knew, img_size, smap[1][0], smap[1][1]);
     }
-
-    std::cout << "Width: " << _width << "\t"
-              << "Height: " << _height << "\t"
-              << "V.Fov: " << _vfov << "\n";
-    std::cout << "K Matrix: \n" << Knew << std::endl;
-    std::cout << "Ndisp: " << _ndisp << "\t"
-              << "Wsize: " << _wsize << "\n";
 }
 
 void denseStereo::DisparityImage(const cv::Mat &recl, const cv::Mat &recr, cv::Mat &disp, cv::Mat &depth_map) {
