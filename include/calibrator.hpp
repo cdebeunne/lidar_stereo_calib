@@ -19,7 +19,7 @@ class Calibrator {
     Calibrator(std::string config_file, std::string stereo_config_file) {
         _leftImage  = cv::Mat();
         _rightImage = cv::Mat();
-        _pointCloud = nullptr;
+        _pcl_cloud_lidar = nullptr;
 
         // Load DS parameters
         YAML::Node config = YAML::LoadFile(config_file);
@@ -29,10 +29,10 @@ class Calibrator {
         _ds->_wsize       = config["wsize"].as<double>();
         _ds->InitRectifyMap();
 
-        // Load T_cam_lidar
+        // Load T_lidar_cam0
         std::vector<double> data_T(16);
-        data_T                 = config["T_cam_lidar"].as<std::vector<double>>();
-        _T_cam_lidar = Eigen::Map<Eigen::Affine3d::MatrixType>(&data_T[0], 4, 4).transpose();
+        data_T                 = config["T_lidar_cam0"].as<std::vector<double>>();
+        _T_lidar_cam0 = Eigen::Map<Eigen::Affine3d::MatrixType>(&data_T[0], 4, 4).transpose();
     };
 
     void setLeftImage(const cv::Mat &leftImage);
@@ -48,8 +48,8 @@ class Calibrator {
   private:
     cv::Mat _leftImage;
     cv::Mat _rightImage;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr _pointCloud;
-    Eigen::Matrix4d _T_cam_lidar;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr _pcl_cloud_lidar;
+    Eigen::Matrix4d _T_lidar_cam0;
 
     std::shared_ptr<denseStereo> _ds;
 };
