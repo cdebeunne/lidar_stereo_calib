@@ -12,6 +12,17 @@ cv::Mat Calibrator::getRightImage() const { return _rightImage; }
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr Calibrator::getPointCloud() const { return _pcl_cloud_lidar; }
 
+void torrusFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_in,
+                  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_out,
+                  double min,
+                  double max) {
+
+    cloud_out->clear();
+    for (auto pt : cloud_in->points)
+        if (sqrt(pt.x * pt.x + pt.y * pt.y + pt.z * pt.z) > min && sqrt(pt.x * pt.x + pt.y * pt.y + pt.z * pt.z) < max)
+            cloud_out->points.push_back(pt);
+}
+
 bool Calibrator::calibrate() {
 
     while (_leftImage.empty() || _rightImage.empty() || _pcl_cloud_lidar == nullptr) {
@@ -41,53 +52,62 @@ bool Calibrator::calibrate() {
 
     // Downsample dense stereo
     pcl::VoxelGrid<pcl::PointXYZ> sor;
-    sor.setInputCloud(pcl_cloud_stereo );
-    sor.setLeafSize(0.025f, 0.025f, 0.025f);
-    sor.filter(*pcl_cloud_stereo );
+    sor.setInputCloud(pcl_cloud_stereo);
+    sor.setLeafSize(0.05f, 0.05f, 0.05f);
+    sor.filter(*pcl_cloud_stereo);
+
+    // Filter dense stereo
+    pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_cloud_stereo_filtered(new pcl::PointCloud<pcl::PointXYZ>);
+    torrusFilter(pcl_cloud_stereo, pcl_cloud_stereo_filtered, _min_dist, _max_dist);
 
     // Perform ICP
     pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
-    icp.setInputSource(pcl_cloud_stereo);
+    icp.setInputSource(pcl_cloud_stereo_filtered);
     icp.setInputTarget(_pcl_cloud_lidar);
-    icp.setMaximumIterations(20);
-    icp.setMaxCorrespondenceDistance(0.25);
+    icp.setMaximumIterations(_max_iterations);
+    icp.setMaxCorrespondenceDistance(_max_correspondence_distance);
 
+    // We perform ICP i.e. find the transformation matrix that aligns the stereo pointcloud with the lidar pointcloud
     pcl::PointCloud<pcl::PointXYZ> final_cloud;
     icp.align(final_cloud, _T_lidar_cam0.cast<float>());
 
-    if (!icp.hasConverged())
-    {
+    if (!icp.hasConverged()) {
         std::cerr << "ICP did not converge" << std::endl;
         std::cout << "Fitness score: " << icp.getFitnessScore() << std::endl;
 
         // Visualization
         pcl::visualization::PCLVisualizer viewer("ICP Alignment");
-        viewer.addPointCloud(_pcl_cloud_lidar, pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>(_pcl_cloud_lidar, 255, 0, 0), "_pcl_cloud_lidar");
-        viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "_pcl_cloud_lidar");
+        viewer.addPointCloud(
+            _pcl_cloud_lidar,
+            pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>(_pcl_cloud_lidar, 255, 0, 0),
+            "cloud_lidar");
+        viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "cloud_lidar");
 
-        pcl::PointCloud<pcl::PointXYZ>::Ptr final_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>(*pcl_cloud_stereo));
+        pcl::PointCloud<pcl::PointXYZ>::Ptr final_cloud_ptr(
+            new pcl::PointCloud<pcl::PointXYZ>(*pcl_cloud_stereo_filtered));
         pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> final_color(final_cloud_ptr, 0, 0, 255);
-        pcl::transformPointCloud(*pcl_cloud_stereo, *final_cloud_ptr, _T_lidar_cam0.cast<float>());
+        pcl::transformPointCloud(*pcl_cloud_stereo_filtered, *final_cloud_ptr, _T_lidar_cam0.cast<float>());
         viewer.addPointCloud(final_cloud_ptr, final_color, "final_cloud");
 
         viewer.addCoordinateSystem();
 
         viewer.spin();
         return false;
-    } else
-    {
+    } else {
         std::cout << "ICP converged with fitness score: " << icp.getFitnessScore() << std::endl;
-        std::cout << "Transformation matrix:\n"
-                  << icp.getFinalTransformation() << std::endl;
+        std::cout << "Transformation matrix:\n" << icp.getFinalTransformation() << std::endl;
 
         // Visualization
         pcl::visualization::PCLVisualizer viewer("ICP Alignment");
-        viewer.addPointCloud(_pcl_cloud_lidar, pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>(_pcl_cloud_lidar, 255, 0, 0), "_pcl_cloud_lidar");
-        viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "_pcl_cloud_lidar");
+        viewer.addPointCloud(
+            _pcl_cloud_lidar,
+            pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>(_pcl_cloud_lidar, 255, 0, 0),
+            "cloud_lidar");
+        viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "cloud_lidar");
 
-        pcl::PointCloud<pcl::PointXYZ>::Ptr final_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>(*pcl_cloud_stereo));
+        pcl::PointCloud<pcl::PointXYZ>::Ptr final_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>(*pcl_cloud_stereo_filtered));
         pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> final_color(final_cloud_ptr, 0, 0, 255);
-        pcl::transformPointCloud(*pcl_cloud_stereo, *final_cloud_ptr, icp.getFinalTransformation());
+        pcl::transformPointCloud(*pcl_cloud_stereo_filtered, *final_cloud_ptr, icp.getFinalTransformation());
         viewer.addPointCloud(final_cloud_ptr, final_color, "final_cloud");
         viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "final_cloud");
 

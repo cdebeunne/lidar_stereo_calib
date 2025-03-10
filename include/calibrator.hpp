@@ -28,6 +28,12 @@ class Calibrator {
         _ds->_ndisp       = config["ndisp"].as<double>();
         _ds->_wsize       = config["wsize"].as<double>();
         _ds->InitRectifyMap();
+        _min_dist = config["min_dist"].as<double>();
+        _max_dist = config["max_dist"].as<double>();
+
+        // Load ICP parameters 
+        _max_correspondence_distance = config["max_correspondence_distance"].as<double>();
+        _max_iterations              = config["max_iterations"].as<int>();
 
         // Load T_lidar_cam0
         std::vector<double> data_T(16);
@@ -51,7 +57,13 @@ class Calibrator {
     pcl::PointCloud<pcl::PointXYZ>::Ptr _pcl_cloud_lidar;
     Eigen::Matrix4d _T_lidar_cam0;
 
+    // Dense stereo parameters
     std::shared_ptr<denseStereo> _ds;
+    double _min_dist, _max_dist;
+
+    // ICP parameters
+    double _max_correspondence_distance;
+    int _max_iterations;
 };
 
 #endif // CALIBRATOR_HPP

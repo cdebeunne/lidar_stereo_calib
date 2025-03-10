@@ -8,6 +8,12 @@ topics:
 vfov: 100
 ndisp: 80
 wsize: 7
+min_dist: 1
+max_dist: 7.5
+
+# ICP parameters 
+max_correspondence_distance: 0.5
+max_iterations: 20
 
 # Init transformation of the lidar in left camera frame
 T_lidar_cam0: [0.00162123, -0.0082983, -0.999964, 0.0841812, 

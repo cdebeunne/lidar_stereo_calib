@@ -230,10 +230,6 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr denseStereo::pcFromDepthMap(const cv::Mat &d
             
             // The depth is the z value of the 3D point in the camera frame
             double w = static_cast<double>(depth_map.at<float>(r, c));
-
-            // For "foire à la saucisse"
-            if (w > 10 || w < 0.5)
-                continue;
                 
             // The 3D point is X = w  K^{-1} [u, v, 1]^T 
             double x = (double)(c - c_x) / f_x;
