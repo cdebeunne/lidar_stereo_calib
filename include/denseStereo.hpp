@@ -3,6 +3,8 @@
 #include <iostream>
 #include <stack>
 
+#include <yaml-cpp/yaml.h>
+
 // For opencv
 #include "opencv2/calib3d.hpp"
 #include "opencv2/core.hpp"

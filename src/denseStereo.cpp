@@ -6,41 +6,39 @@ inline double MatRowMul(cv::Mat m, double x, double y, double z, int r) {
 
 denseStereo::denseStereo(std::string configfilepath) : _configfilepath(configfilepath) {
 
-    // Load parameters
-    cv::FileStorage fs(_configfilepath, cv::FileStorage::READ);
-    if (!fs.isOpened()) {
-        std::cout << "Failed to open ini parameters" << std::endl;
+    YAML::Node config = YAML::LoadFile(_configfilepath);
+
+    if (config.IsNull()) {
+        std::cout << "Failed to open YAML parameters" << std::endl;
         exit(-1);
     }
 
     cv::Size cap_size;
-    fs["cam_model"] >> _cam_model;
-    fs["cap_size"] >> cap_size;
-    fs["Kl"] >> Kl;
-    fs["xil"] >> xil;
+    _cam_model = config["cam_model"].as<std::string>();
+    cap_size.width = config["cap_size"]["width"].as<int>();
+    cap_size.height = config["cap_size"]["height"].as<int>();
+
+    Kl = cv::Mat(config["Kl"].as<std::vector<double>>()).reshape(1);
+    xil = config["xil"].as<double>();
     Rl = cv::Mat::eye(3, 3, CV_64F);
-
-    fs["Rl"] >> Rl;
-    fs["Kr"] >> Kr;
-
-    fs["xir"] >> xir;
-    fs["Rr"] >> Rr;
-    fs["T"] >> Translation;
+    Rl = cv::Mat(config["Rl"].as<std::vector<double>>()).reshape(1);
+    Kr = cv::Mat(config["Kr"].as<std::vector<double>>()).reshape(1);
+    xir = config["xir"].as<double>();
+    Rr = cv::Mat(config["Rr"].as<std::vector<double>>()).reshape(1);
+    Translation = cv::Mat(config["tr"].as<std::vector<double>>()).reshape(1);
 
     if (_cam_model == "ds") {
-        fs["alphal"] >> alphal;
-        fs["alphar"] >> alphar;
+        alphal = config["alphal"].as<double>();
+        alphar = config["alphar"].as<double>();
     } else if (_cam_model == "omni") {
-        fs["Dr"] >> Dr;
-        fs["Dl"] >> Dl;
+        Dr = cv::Mat(config["Dr"].as<std::vector<double>>()).reshape(1);
+        Dl = cv::Mat(config["Dl"].as<std::vector<double>>()).reshape(1);
     }
-
-    fs.release();
 
     _cap_cols = cap_size.width;
     _cap_rows = cap_size.height;
-    _width    = _cap_cols;
-    _height   = _cap_rows;
+    _width = _cap_cols;
+    _height = _cap_rows;
 }
 
 void denseStereo::InitUndistortRectifyMap(cv::Mat K,
