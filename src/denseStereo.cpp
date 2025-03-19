@@ -15,17 +15,27 @@ denseStereo::denseStereo(std::string configfilepath) : _configfilepath(configfil
 
     cv::Size cap_size;
     _cam_model = config["cam_model"].as<std::string>();
-    cap_size.width = config["cap_size"]["width"].as<int>();
-    cap_size.height = config["cap_size"]["height"].as<int>();
+    std::vector<int> cap_size_vec = config["cap_size"].as<std::vector<int>>();
+    cap_size.width = cap_size_vec[0];
+    cap_size.height = cap_size_vec[1];
 
-    Kl = cv::Mat(config["Kl"].as<std::vector<double>>()).reshape(1);
+    std::vector<double> Kl_vec(9);
+    Kl_vec = config["Kleft"].as<std::vector<double>>();
+    Kl = cv::Mat(Kl_vec, CV_64F).reshape(1, (3,3));
     xil = config["xil"].as<double>();
-    Rl = cv::Mat::eye(3, 3, CV_64F);
-    Rl = cv::Mat(config["Rl"].as<std::vector<double>>()).reshape(1);
-    Kr = cv::Mat(config["Kr"].as<std::vector<double>>()).reshape(1);
+
+    std::vector<double> Kr_vec(9);
+    Kr_vec = config["Kright"].as<std::vector<double>>();
+    Kr = cv::Mat(Kr_vec, CV_64F).reshape(1, (3,3));
     xir = config["xir"].as<double>();
-    Rr = cv::Mat(config["Rr"].as<std::vector<double>>()).reshape(1);
-    Translation = cv::Mat(config["tr"].as<std::vector<double>>()).reshape(1);
+
+    std::vector<double> Rr_vec(9);
+    Rr_vec = config["Rr"].as<std::vector<double>>();
+    Rr = cv::Mat(Rr_vec, CV_64F).reshape(1, (3,3));
+    Rl = cv::Mat::eye(3, 3, CV_64F);
+    std::vector<double> t_vec(9);
+    t_vec = config["tr"].as<std::vector<double>>();
+    Translation = cv::Mat(t_vec, CV_64F).reshape(1, (3,1));
 
     if (_cam_model == "ds") {
         alphal = config["alphal"].as<double>();
