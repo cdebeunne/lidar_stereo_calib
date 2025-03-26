@@ -22,7 +22,7 @@ class denseStereo {
     denseStereo() {}
     denseStereo(std::string configfilepath);
 
-    void InitUndistortRectifyMap(cv::Mat K,
+    void InitUndistortRectifyMapOmni(cv::Mat K,
                                  cv::Mat D,
                                  double xi,
                                  cv::Mat R,

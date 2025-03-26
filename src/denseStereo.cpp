@@ -51,7 +51,7 @@ denseStereo::denseStereo(std::string configfilepath) : _configfilepath(configfil
     _height = _cap_rows;
 }
 
-void denseStereo::InitUndistortRectifyMap(cv::Mat K,
+void denseStereo::InitUndistortRectifyMapOmni(cv::Mat K,
                                           cv::Mat D,
                                           double xi,
                                           cv::Mat R,
@@ -163,8 +163,11 @@ void denseStereo::InitRectifyMap() {
         InitUndistortRectifyMapDS(
             Kr, alphar, xir, Rr, Knew, img_size, smap[1][0], smap[1][1]);
     } else if (_cam_model == "omni") {
-        InitUndistortRectifyMap(Kl, Dl, xil, Rl, Knew, img_size, smap[0][0], smap[0][1]);
-        InitUndistortRectifyMap(Kr, Dr, xir, Rr, Knew, img_size, smap[1][0], smap[1][1]);
+        InitUndistortRectifyMapOmni(Kl, Dl, xil, Rl, Knew, img_size, smap[0][0], smap[0][1]);
+        InitUndistortRectifyMapOmni(Kr, Dr, xir, Rr, Knew, img_size, smap[1][0], smap[1][1]);
+    } else if (_cam_model == "pinhole") {
+        cv::initUndistortRectifyMap(Kl, Dl, Rl, Knew, img_size, CV_32F, smap[0][0], smap[0][1]);
+        cv::initUndistortRectifyMap(Kr, Dr, Rr, Knew, img_size, CV_32F, smap[1][0], smap[1][1]);
     }
 }
 
