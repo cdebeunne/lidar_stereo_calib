@@ -47,6 +47,10 @@ bool Calibrator::calibrate() {
     cv::Mat depth_filtered;
     cv::medianBlur(depth_map, depth_filtered, 5);
 
+    // Display disparity image
+    cv::imshow("Disparity Image", disp_img);
+    cv::waitKey(10000);
+
     // Pointcloud computation
     pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_cloud_stereo = _ds->pcFromDepthMap(depth_filtered);
 
@@ -60,10 +64,19 @@ bool Calibrator::calibrate() {
     pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_cloud_stereo_filtered(new pcl::PointCloud<pcl::PointXYZ>);
     torrusFilter(pcl_cloud_stereo, pcl_cloud_stereo_filtered, _min_dist, _max_dist);
 
+    // Filter LiDAR too
+    pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_cloud_lidar_filtered(new pcl::PointCloud<pcl::PointXYZ>);
+    torrusFilter(_pcl_cloud_lidar, pcl_cloud_lidar_filtered, _min_dist, _max_dist);
+
+    // Remove NaNs
+    std::vector<int> indices;
+    pcl::removeNaNFromPointCloud(*pcl_cloud_stereo_filtered, *pcl_cloud_stereo_filtered, indices);
+    pcl::removeNaNFromPointCloud(*pcl_cloud_lidar_filtered, *pcl_cloud_lidar_filtered, indices);
+
     // Perform ICP
     pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
     icp.setInputSource(pcl_cloud_stereo_filtered);
-    icp.setInputTarget(_pcl_cloud_lidar);
+    icp.setInputTarget(pcl_cloud_lidar_filtered);
     icp.setMaximumIterations(_max_iterations);
     icp.setMaxCorrespondenceDistance(_max_correspondence_distance);
 

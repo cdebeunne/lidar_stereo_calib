@@ -22,13 +22,11 @@ denseStereo::denseStereo(std::string configfilepath) : _configfilepath(configfil
     std::vector<double> Kl_vec(9);
     Kl_vec = config["Kleft"].as<std::vector<double>>();
     Kl = cv::Mat(Kl_vec, CV_64F).reshape(1, (3,3));
-    xil = config["xil"].as<double>();
-
+    
     std::vector<double> Kr_vec(9);
     Kr_vec = config["Kright"].as<std::vector<double>>();
     Kr = cv::Mat(Kr_vec, CV_64F).reshape(1, (3,3));
-    xir = config["xir"].as<double>();
-
+    
     std::vector<double> Rr_vec(9);
     Rr_vec = config["Rr"].as<std::vector<double>>();
     Rr = cv::Mat(Rr_vec, CV_64F).reshape(1, (3,3));
@@ -40,9 +38,13 @@ denseStereo::denseStereo(std::string configfilepath) : _configfilepath(configfil
     if (_cam_model == "ds") {
         alphal = config["alphal"].as<double>();
         alphar = config["alphar"].as<double>();
+        xir = config["xir"].as<double>();
+        xil = config["xil"].as<double>();
     } else if (_cam_model == "omni") {
         Dr = cv::Mat(config["Dr"].as<std::vector<double>>()).reshape(1);
         Dl = cv::Mat(config["Dl"].as<std::vector<double>>()).reshape(1);
+        xir = config["xir"].as<double>();
+        xil = config["xil"].as<double>();
     }
 
     _cap_cols = cap_size.width;
