@@ -18,6 +18,8 @@ void torrusFilter(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_in,
                   double max) {
 
     cloud_out->clear();
+    cloud_out->width = 1;
+    cloud_out->height = cloud_in->points.size();
     for (auto pt : cloud_in->points)
         if (sqrt(pt.x * pt.x + pt.y * pt.y + pt.z * pt.z) > min && sqrt(pt.x * pt.x + pt.y * pt.y + pt.z * pt.z) < max)
             cloud_out->points.push_back(pt);
@@ -57,7 +59,7 @@ bool Calibrator::calibrate() {
     // Downsample dense stereo
     pcl::VoxelGrid<pcl::PointXYZ> sor;
     sor.setInputCloud(pcl_cloud_stereo);
-    sor.setLeafSize(0.05f, 0.05f, 0.05f);
+    sor.setLeafSize(0.1f, 0.1f, 0.1f);
     sor.filter(*pcl_cloud_stereo);
 
     // Filter dense stereo
@@ -91,8 +93,8 @@ bool Calibrator::calibrate() {
         // Visualization
         pcl::visualization::PCLVisualizer viewer("ICP Alignment");
         viewer.addPointCloud(
-            _pcl_cloud_lidar,
-            pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>(_pcl_cloud_lidar, 255, 0, 0),
+            pcl_cloud_lidar_filtered,
+            pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>(pcl_cloud_lidar_filtered, 255, 0, 0),
             "cloud_lidar");
         viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "cloud_lidar");
 
@@ -100,7 +102,7 @@ bool Calibrator::calibrate() {
             new pcl::PointCloud<pcl::PointXYZ>(*pcl_cloud_stereo_filtered));
         pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> final_color(final_cloud_ptr, 0, 0, 255);
         pcl::transformPointCloud(*pcl_cloud_stereo_filtered, *final_cloud_ptr, _T_lidar_cam0.cast<float>());
-        viewer.addPointCloud(final_cloud_ptr, final_color, "final_cloud");
+        viewer.addPointCloud(pcl_cloud_stereo_filtered, final_color, "final_cloud");
 
         viewer.addCoordinateSystem();
 
@@ -113,8 +115,8 @@ bool Calibrator::calibrate() {
         // Visualization
         pcl::visualization::PCLVisualizer viewer("ICP Alignment");
         viewer.addPointCloud(
-            _pcl_cloud_lidar,
-            pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>(_pcl_cloud_lidar, 255, 0, 0),
+            pcl_cloud_lidar_filtered,
+            pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>(pcl_cloud_lidar_filtered, 255, 0, 0),
             "cloud_lidar");
         viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "cloud_lidar");
 
